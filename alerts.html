@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GardenSense - Smart Alerts & Notifications</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+            min-height: 100vh;
+            width: 1600px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #2d5a2d 0%, #4a7c59 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .logo { font-size: 1.8rem; font-weight: bold; }
+        .nav { display: flex; gap: 2rem; }
+        .nav a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 20px; transition: all 0.3s; }
+        .nav a.active, .nav a:hover { background: rgba(255,255,255,0.2); }
+        .container { max-width: 1600px; margin: 0 auto; padding: 1rem; }
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .page-header h1 {
+            color: #2d5a2d;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .page-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        .alert-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+        .summary-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .summary-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+        .critical-icon { background: #f44336; }
+        .warning-icon { background: #ff9800; }
+        .info-icon { background: #2196f3; }
+        .success-icon { background: #4caf50; }
+        .summary-count {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #2d5a2d;
+            margin-bottom: 0.5rem;
+        }
+        .summary-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .alerts-container {
+            display: grid;
+            grid-template-columns: 3fr 1fr;
+            gap: 1rem;
+        }
+        .alerts-main {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+        .alerts-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+        .alerts-title {
+            color: #2d5a2d;
+            font-size: 1.5rem;
+        }
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: #f0f0f0;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: #666;
+        }
+        .tab-btn.active {
+            background: #4a7c59;
+            color: white;
+        }
+        .alert-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border-radius: 15px;
+            border-left: 5px solid;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .alert-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .alert-critical {
+            background: #ffebee;
+            border-left-color: #f44336;
+        }
+        .alert-warning {
+            background: #fff8e1;
+            border-left-color: #ff9800;
+        }
+        .alert-info {
+            background: #e3f2fd;
+            border-left-color: #2196f3;
+        }
+        .alert-success {
+            background: #e8f5e8;
+            border-left-color: #4caf50;
+        }
+        .alert-icon-main {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 1.3rem;
+            color: white;
+            flex-shrink: 0;
+        }
+        .alert-content {
+            flex: 1;
+        }
+        .alert-title {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #2d5a2d;
+        }
+        .alert-description {
+            color: #666;
+            margin-bottom: 0.8rem;
+            line-height: 1.4;
+        }
+        .alert-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #999;
+        }
+        .alert-time {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .alert-plant {
+            background: rgba(74,124,89,0.1);
+            color: #4a7c59;
+            padding: 0.2rem 0.6rem;
+            border-radius: 10px;
+        }
+        .alert-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+        .action-btn {
+            padding: 0.4rem 1rem;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #4a7c59;
+            color: white;
+        }
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #666;
+        }
+        .action-btn:hover {
+            transform: translateY(-1px);
+        }
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+        .notification-settings {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+        .settings-title {
+            color: #2d5a2d;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        .setting-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .toggle-switch {
+            width: 40px;
+            height: 20px;
+            background: #ddd;
+            border-radius: 10px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .toggle-switch.active {
+            background: #4a7c59;
+        }
+        .toggle-switch::after {
+            content: '';
+            width: 16px;
+            height: 16px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s;
+        }
+        .toggle-switch.active::after {
+            left: 22px;
+        }
+        .quick-actions {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+        .quick-action-btn {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 0.8rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 0.9rem;
+        }
+        .quick-action-btn:last-child {
+            margin-bottom: 0;
+        }
+        .action-water {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .action-scan {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+        .action-fertilize {
+            background: #fff8e1;
+            color: #f57c00;
+        }
+        .action-report {
+            background: #e8f5e8;
+            color: #388e3c;
+        }
+        .recent-activity {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+        .activity-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+        .activity-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 1rem;
+        }
+        .activity-resolved { background: #4caf50; }
+        .activity-new { background: #f44336; }
+        .activity-pending { background: #ff9800; }
+        .activity-text {
+            flex: 1;
+            font-size: 0.8rem;
+            color: #666;
+        }
+        .activity-time {
+            font-size: 0.7rem;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">🌱 GardenSense</div>
+        <nav class="nav">
+            <a href="#">Dashboard</a>
+            <a href="#">My Plants</a>
+            <a href="#">Diagnosis</a>
+            <a href="#">Analytics</a>
+            <a href="#" class="active">Alerts</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>🚨 Smart Alerts & Notifications</h1>
+            <p>Real-time monitoring and intelligent alerts for optimal plant care</p>
+        </div>
+
+        <div class="alert-summary">
+            <div class="summary-card">
+                <div class="summary-icon critical-icon">🚨</div>
+                <div class="summary-count">3</div>
+                <div class="summary-label">Critical Alerts</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon warning-icon">⚠️</div>
+                <div class="summary-count">7</div>
+                <div class="summary-label">Warnings</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon info-icon">ℹ️</div>
+                <div class="summary-count">12</div>
+                <div class="summary-label">Info Alerts</div>
+            </div>
+            <div class="summary-card">
+                <div class="summary-icon success-icon">✅</div>
+                <div class="summary-count">28</div>
+                <div class="summary-label">Resolved Today</div>
+            </div>
+        </div>
+
+        <div class="alerts-container">
+            <div class="alerts-main">
+                <div class="alerts-header">
+                    <h2 class="alerts-title">Active Alerts</h2>
+                    <div class="filter-tabs">
+                        <button class="tab-btn active">All</button>
+                        <button class="tab-btn">Critical</button>
+                        <button class="tab-btn">Warning</button>
+                        <button class="tab-btn">Info</button>
+                    </div>
+                </div>
+
+                <div class="alert-item alert-critical">
+                    <div class="alert-icon-main critical-icon">🚨</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Severe Dehydration Detected</div>
+                        <div class="alert-description">
+                            Monstera Deliciosa soil moisture has dropped to 15% - critically low. Immediate watering required to prevent permanent damage.
+                        </div>
+                        <div class="alert-meta">
+                            <div class="alert-time">🕐 2 minutes ago</div>
+                            <div class="alert-plant">Monstera Deliciosa</div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="action-btn btn-primary">💧 Water Now</button>
+                            <button class="action-btn btn-secondary">📱 Remind Later</button>
+                            <button class="action-btn btn-secondary">❌ Dismiss</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert-item alert-critical">
+                    <div class="alert-icon-main critical-icon">🦠</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Disease Progression Alert</div>
+                        <div class="alert-description">
+                            Fiddle Leaf Fig leaf spot disease has spread to 5 additional leaves since last scan. Immediate treatment recommended.
+                        </div>
+                        <div class="alert-meta">
+                            <div class="alert-time">🕐 15 minutes ago</div>
+                            <div class="alert-plant">Fiddle Leaf Fig</div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="action-btn btn-primary">🔬 View Diagnosis</button>
+                            <button class="action-btn btn-secondary">📋 Treatment Plan</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert-item alert-warning">
+                    <div class="alert-icon-main warning-icon">🌡️</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Temperature Spike Warning</div>
+                        <div class="alert-description">
+                            Living room temperature reached 32°C - above optimal range for tropical plants. Consider improving ventilation.
+                        </div>
+                        <div class="alert-meta">
+                            <div class="alert-time">🕐 1 hour ago</div>
+                            <div class="alert-plant">Multiple Plants</div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="action-btn btn-primary">🌬️ Ventilation Tips</button>
+                            <button class="action-btn btn-secondary">📊 View Trends</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert-item alert-warning">
+                    <div class="alert-icon-main warning-icon">💨</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Low Humidity Alert</div>
+                        <div class="alert-description">
+                            Bedroom humidity dropped to 35% - below recommended 50-60% for Snake Plant optimal health.
+                        </div>
+                        <div class="alert-meta">
+                            <div class="alert-time">🕐 2 hours ago</div>
+                            <div class="alert-plant">Snake Plant</div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="action-btn btn-primary">💦 Add Humidifier</button>
+                            <button class="action-btn btn-secondary">📈 Humidity History</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert-item alert-info">
+                    <div class="alert-icon-main info-icon">🌱</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Growth Milestone Reached</div>
+                        <div class="alert-description">
+                            Peace Lily has grown 3cm this week! Current care routine is producing excellent results.
+                        </div>
+                        <div class="alert-meta">
+                            <div class="alert-time">🕐 3 hours ago</div>
+                            <div class="alert-plant">Peace Lily</div>
+                        </div>
+                        <div class="alert-actions">
+                            <button class="action-btn btn-primary">📸 Take Photo</button>
+                            <button class="action-btn btn-secondary">📊 Growth Chart</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert-item alert-success">
+                    <div class="alert-icon-main success-icon">✅</div>
+                    <div class="alert-content">
+                        <div class="alert-title">Sensor Reconnected</div>
+                        <div class="alert-description">
+                            Kitchen sensor is back online after 2-hour disconnection. All monitoring systems fully operational.
+                        </div>
+                        <div class="alert-meta">
+                            <div class="alert-time">🕐 4 hours ago</div>
+                            <div class="alert-plant">System Status</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="notification-settings">
+                    <h3 class="settings-title">🔔 Notification Settings</h3>
+                    <div class="setting-item">
+                        <span class="setting-label">Critical Alerts</span>
+                        <div class="toggle-switch active"></div>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Watering Reminders</span>
+                        <div class="toggle-switch active"></div>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Growth Updates</span>
+                        <div class="toggle-switch active"></div>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Weekly Reports</span>
+                        <div class="toggle-switch"></div>
+                    </div>
+                    <div class="setting-item">
+                        <span class="setting-label">Email Notifications</span>
+                        <div class="toggle-switch active"></div>
+                    </div>
+                </div>
+
+                <div class="quick-actions">
+                    <h3 class="settings-title">⚡ Quick Actions</h3>
+                    <button class="quick-action-btn action-water">
+                        💧 Water All Plants
+                    </button>
+                    <button class="quick-action-btn action-scan">
+                        📸 Scan All Plants
+                    </button>
+                    <button class="quick-action-btn action-fertilize">
+                        🌱 Schedule Fertilizing
+                    </button>
+                    <button class="quick-action-btn action-report">
+                        📊 Generate Report
+                    </button>
+                </div>
+
+                <div class="recent-activity">
+                    <h3 class="settings-title">📋 Recent Activity</h3>
+                    <div class="activity-item">
+                        <div class="activity-dot activity-resolved"></div>
+                        <div class="activity-text">Watered Monstera Deliciosa</div>
+                        <div class="activity-time">5m ago</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-dot activity-new"></div>
+                        <div class="activity-text">New disease detected</div>
+                        <div class="activity-time">15m ago</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-dot activity-pending"></div>
+                        <div class="activity-text">Humidity adjustment needed</div>
+                        <div class="activity-time">2h ago</div>
+                    </div>
+                    <div class="activity-item">
+                        <div class="activity-dot activity-resolved"></div>
+                        <div class="activity-text">Sensor reconnected</div>
+                        <div class="activity-time">4h ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

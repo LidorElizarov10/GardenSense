@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GardenSense - AI Plant Diagnosis</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+            min-height: 100vh;
+            width: 1600px;
+            margin: 0 auto;
+        }
+        .header {
+            background: linear-gradient(135deg, #2d5a2d 0%, #4a7c59 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .logo { font-size: 1.8rem; font-weight: bold; }
+        .nav { display: flex; gap: 2rem; }
+        .nav a { color: white; text-decoration: none; padding: 0.5rem 1rem; border-radius: 20px; transition: all 0.3s; }
+        .nav a.active, .nav a:hover { background: rgba(255,255,255,0.2); }
+        .container { max-width: 1600px; margin: 0 auto; padding: 0.2rem; }
+        .page-header {
+            text-align: center;
+            margin-bottom: 0.5rem;
+        }
+        .page-header h1 {
+            color: #2d5a2d;
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        .page-header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        .upload-section {
+            background: white;
+            border-radius: 20px;
+            padding: 0.8rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        .upload-area {
+            border: 2px dashed #4a7c59;
+            border-radius: 15px;
+            padding: 0.8rem;
+            background: #f8fbf8;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .upload-area:hover {
+            background: #e8f5e8;
+            border-color: #2d5a2d;
+        }
+        .upload-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            color: #4a7c59;
+        }
+        .upload-text {
+            color: #2d5a2d;
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+        .upload-subtext {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        .upload-btn {
+            background: linear-gradient(135deg, #4a7c59 0%, #2d5a2d 100%);
+            color: white;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: all 0.3s;
+        }
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(45,90,45,0.3);
+        }
+        .analysis-section {
+            background: white;
+            border-radius: 20px;
+            padding: 0.5rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .analysis-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.8rem;
+        }
+        .analysis-status {
+            background: #e8f5e8;
+            color: #2d5a2d;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            margin-left: 1rem;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 3fr;
+            gap: 0.5rem;
+        }
+        .image-preview {
+            background: #f8fbf8;
+            border-radius: 15px;
+            padding: 1rem;
+            text-align: center;
+        }
+        .preview-img {
+            width: 100%;
+            max-width: 120px;
+            height: 120px;
+            background: #e8f5e8;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        .diagnosis-results {
+            background: #f8fbf8;
+            border-radius: 15px;
+            padding: 0.5rem;
+        }
+        .confidence-score {
+            background: linear-gradient(135deg, #4a7c59 0%, #2d5a2d 100%);
+            color: white;
+            padding: 0.5rem;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 0.8rem;
+        }
+        .confidence-score h3 {
+            margin-bottom: 0.5rem;
+        }
+        .confidence-bar {
+            background: rgba(255,255,255,0.3);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+        .confidence-fill {
+            background: white;
+            height: 100%;
+            width: 94%;
+            border-radius: 4px;
+        }
+        .diagnosis-item {
+            background: white;
+            border-radius: 10px;
+            padding: 0.8rem;
+            margin-bottom: 0.5rem;
+            border-left: 4px solid #ff6b6b;
+        }
+        .diagnosis-item.healthy {
+            border-left-color: #4a7c59;
+        }
+        .diagnosis-title {
+            color: #2d5a2d;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        .diagnosis-desc {
+            color: #666;
+            margin-bottom: 1rem;
+        }
+        .recommendations {
+            background: #fff8e1;
+            border-radius: 10px;
+            padding: 0.8rem;
+            margin-top: 0.8rem;
+        }
+        .recommendations h3 {
+            color: #2d5a2d;
+            margin-bottom: 1rem;
+        }
+        .recommendation-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.8rem;
+            color: #666;
+        }
+        .recommendation-item::before {
+            content: "✓";
+            background: #4a7c59;
+            color: white;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 1rem;
+            font-size: 0.8rem;
+        }
+        .history-section {
+            background: white;
+            border-radius: 20px;
+            padding: 0.8rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            margin-top: 0.8rem;
+        }
+        .history-item {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .history-date {
+            color: #666;
+            font-size: 0.9rem;
+            min-width: 120px;
+        }
+        .history-plant {
+            color: #2d5a2d;
+            font-weight: bold;
+            margin-right: 1rem;
+        }
+        .history-result {
+            background: #e8f5e8;
+            color: #2d5a2d;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">🌱 GardenSense</div>
+        <nav class="nav">
+            <a href="#">Dashboard</a>
+            <a href="#">My Plants</a>
+            <a href="#" class="active">Diagnosis</a>
+            <a href="#">Analytics</a>
+            <a href="#">Profile</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>🔬 AI Plant Diagnosis</h1>
+            <p>Upload a photo of your plant and get instant AI-powered health analysis</p>
+        </div>
+
+        <div class="upload-section">
+            <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📷</div>
+                <div class="upload-text">Drop your plant photo here</div>
+                <div class="upload-subtext">or click to browse (JPG, PNG up to 10MB)</div>
+                <input type="file" id="fileInput" style="display: none;" accept="image/*">
+            </div>
+            <button class="upload-btn" onclick="startAnalysis()">🔍 Analyze Plant Health</button>
+        </div>
+
+        <div class="analysis-section" id="analysisSection">
+            <div class="analysis-header">
+                <h2>Analysis Complete</h2>
+                <div class="analysis-status">✅ Processed in 2.3s</div>
+            </div>
+
+            <div class="results-grid">
+                <div class="image-preview">
+                    <div class="preview-img">🌿</div>
+                    <p><strong>Monstera Deliciosa</strong></p>
+                    <p>Uploaded: Today, 2:45 PM</p>
+                </div>
+
+                <div class="diagnosis-results">
+                    <div class="confidence-score">
+                        <h3>AI Confidence Score</h3>
+                        <p>94% Match Accuracy</p>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill"></div>
+                        </div>
+                    </div>
+
+                    <div class="diagnosis-item">
+                        <div class="diagnosis-title">🚨 Leaf Spot Disease Detected</div>
+                        <div class="diagnosis-desc">Brown spots with yellow halos indicate bacterial leaf spot. Early stage infection detected on 3 leaves.</div>
+                    </div>
+
+                    <div class="diagnosis-item">
+                        <div class="diagnosis-title">⚠️ Overwatering Signs</div>
+                        <div class="diagnosis-desc">Yellowing lower leaves and soil moisture levels suggest overwatering stress.</div>
+                    </div>
+
+                    <div class="diagnosis-item healthy">
+                        <div class="diagnosis-title">✅ Good Root Health</div>
+                        <div class="diagnosis-desc">No visible root rot or pest damage. Overall plant structure is healthy.</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="recommendations">
+                <h3>🎯 Recommended Actions</h3>
+                <div class="recommendation-item">Remove affected leaves immediately to prevent spread</div>
+                <div class="recommendation-item">Reduce watering frequency to every 7-10 days</div>
+                <div class="recommendation-item">Improve air circulation around the plant</div>
+                <div class="recommendation-item">Apply copper-based fungicide spray</div>
+                <div class="recommendation-item">Monitor daily for 2 weeks and re-scan if symptoms persist</div>
+            </div>
+        </div>
+
+        <div class="history-section">
+            <h2>📋 Recent Diagnoses</h2>
+            <div class="history-item">
+                <div class="history-date">Nov 20, 2024</div>
+                <div class="history-plant">Snake Plant</div>
+                <div class="history-result">Healthy</div>
+            </div>
+            <div class="history-item">
+                <div class="history-date">Nov 18, 2024</div>
+                <div class="history-plant">Peace Lily</div>
+                <div class="history-result">Needs Water</div>
+            </div>
+            <div class="history-item">
+                <div class="history-date">Nov 15, 2024</div>
+                <div class="history-plant">Fiddle Leaf Fig</div>
+                <div class="history-result">Pest Issue</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function startAnalysis() {
+            document.getElementById('analysisSection').style.display = 'block';
+            document.getElementById('analysisSection').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>
