@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GardenSense - Smart Garden Management</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #2d5a2d 0%, #4a7c59 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .logo { font-size: 1.8rem; font-weight: bold; }
+        .nav { display: flex; gap: 2rem; }
+        .nav button { 
+            background: none; 
+            border: none; 
+            color: white; 
+            padding: 0.5rem 1rem; 
+            border-radius: 20px; 
+            cursor: pointer; 
+            transition: all 0.3s; 
+        }
+        .nav button.active, .nav button:hover { background: rgba(255,255,255,0.2); }
+        .container { max-width: 1400px; margin: 0 auto; padding: 1rem; }
+        .page { display: none; }
+        .page.active { display: block; }
+        .page-header { text-align: center; margin-bottom: 2rem; }
+        .page-header h1 { color: #2d5a2d; font-size: 3rem; margin-bottom: 0.5rem; }
+        .page-header p { color: #666; font-size: 1.5rem; }
+        
+        /* Dashboard Styles */
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .stat-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+        .stat-value { font-size: 2.5rem; font-weight: bold; color: #2d5a2d; }
+        .stat-label { color: #666; margin-top: 0.5rem; font-size: 1.1rem; }
+        
+        .plant-selector {
+            background: white;
+            border: 3px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+        }
+        .plant-selector:hover {
+            border-color: #4a7c59;
+            transform: translateY(-2px);
+        }
+        .plant-selector.active {
+            border-color: #4a7c59;
+            background: #e8f5e8;
+        }
+        
+        /* Upload Styles */
+        .upload-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+        .upload-area {
+            border: 3px dashed #4a7c59;
+            border-radius: 15px;
+            padding: 3rem;
+            text-align: center;
+            background: #f8fbf8;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover { background: #e8f5e8; border-color: #2d5a2d; }
+        .upload-icon { font-size: 4rem; margin-bottom: 1rem; color: #4a7c59; }
+        .upload-text { font-size: 1.8rem; color: #2d5a2d; margin-bottom: 0.5rem; }
+        .upload-subtext { color: #666; margin-bottom: 2rem; font-size: 1.2rem; }
+        .upload-btn {
+            background: linear-gradient(135deg, #4a7c59 0%, #2d5a2d 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 25px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(45,90,45,0.3); }
+        .file-input { display: none; }
+        
+        /* Sensor Styles */
+        .sensors-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        .sensor-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+        .sensor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .sensor-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #2d5a2d;
+            font-size: 1.6rem;
+            font-weight: bold;
+        }
+        .sensor-status {
+            padding: 0.4rem 1rem;
+            border-radius: 20px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .status-online { background: #e8f5e8; color: #2d5a2d; }
+        .status-warning { background: #fff8e1; color: #ff9800; }
+        .sensor-value {
+            font-size: 3.5rem;
+            font-weight: bold;
+            color: #4a7c59;
+            text-align: center;
+            margin: 1rem 0;
+        }
+        .sensor-unit { font-size: 1.5rem; color: #666; }
+        
+        /* Search Styles */
+        .search-container {
+            display: flex;
+            gap: 1rem;
+            max-width: 800px;
+            margin: 0 auto 2rem;
+        }
+        .search-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 3px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 1.3rem;
+        }
+        .search-btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 25px;
+            background: linear-gradient(135deg, #4a7c59 0%, #2d5a2d 100%);
+            color: white;
+            cursor: pointer;
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        .result-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            border-left: 4px solid #4a7c59;
+        }
+        .result-title { color: #2d5a2d; font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem; }
+        .result-description { color: #666; line-height: 1.5; font-size: 1.1rem; }
+        
+        /* Analytics Styles */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .metric-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .metric-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #4a7c59 0%, #2d5a2d 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 1.5rem;
+            color: white;
+        }
+        .metric-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2d5a2d;
+            margin-bottom: 0.5rem;
+        }
+        .metric-label { color: #666; font-size: 1.1rem; }
+        
+        /* Common Styles */
+        .section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            font-size: 1.2rem;
+            line-height: 1.6;
+        }
+        .btn {
+            background: linear-gradient(135deg, #4a7c59 0%, #2d5a2d 100%);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(45,90,45,0.3); }
+        .status-message {
+            padding: 1rem;
+            border-radius: 10px;
+            margin: 1rem 0;
+            display: none;
+        }
+        .status-success { background: #e8f5e8; color: #2d5a2d; border-left: 4px solid #4a7c59; }
+        .status-error { background: #ffebee; color: #f44336; border-left: 4px solid #f44336; }
+        .preview-image {
+            width: 100%;
+            max-width: 300px;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin: 1rem auto;
+            display: block;
+        }
+        
+        /* Smart Alerts Styles */
+        .alert-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+            border-left: 6px solid #f44336;
+            animation: slideIn 0.5s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+        .alert-card.critical { border-left-color: #f44336; }
+        .alert-card.warning { border-left-color: #ff9800; }
+        .alert-card.info { border-left-color: #2196f3; }
+        .alert-card.success { border-left-color: #4a7c59; }
+        
+        .alert-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .alert-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #2d5a2d;
+        }
+        .alert-time {
+            font-size: 1rem;
+            color: #666;
+        }
+        .alert-message {
+            font-size: 1.2rem;
+            line-height: 1.5;
+            margin-bottom: 1rem;
+        }
+        .alert-actions {
+            display: flex;
+            gap: 1rem;
+        }
+        .alert-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .btn-resolve {
+            background: #4a7c59;
+            color: white;
+        }
+        .btn-snooze {
+            background: #ff9800;
+            color: white;
+        }
+        .btn-dismiss {
+            background: #666;
+            color: white;
+        }
+        
+        .floating-alert {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+            max-width: 350px;
+            z-index: 1000;
+            animation: bounceIn 0.6s ease-out;
+            border-left: 6px solid #f44336;
+        }
+        
+        .sound-toggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #4a7c59;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: all 0.3s;
+        }
+        .sound-toggle:hover {
+            transform: scale(1.1);
+        }
+        .sound-toggle.muted {
+            background: #666;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @keyframes bounceIn {
+            0% { transform: scale(0.3) translateY(-50px); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1) translateY(0); opacity: 1; }
+        }
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="logo">🌱 GardenSense</div>
+        <nav class="nav">
+            <button onclick="showPage('dashboard')" class="active" id="nav-dashboard">Dashboard</button>
+            <button onclick="showPage('upload')" id="nav-upload">Upload Images</button>
+            <button onclick="showPage('sensors')" id="nav-sensors">IoT Sensors</button>
+            <button onclick="showPage('search')" id="nav-search">Search</button>
+            <button onclick="showPage('analytics')" id="nav-analytics">Analytics</button>
+            <button onclick="showPage('alerts')" id="nav-alerts">Smart Alerts</button>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page active">
+            <div class="page-header">
+                <h1>🏠 Plant Dashboard</h1>
+                <p>Select a plant to view detailed information and sensor data</p>
+            </div>
+            
+            <div class="section">
+                <h2 style="font-size: 1.8rem; margin-bottom: 1rem;">🌿 Select Plant</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
+                    <button class="plant-selector active" onclick="selectPlant('monstera')" id="plant-monstera">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🌿</div>
+                        <div style="font-size: 1.2rem; font-weight: bold;">Monstera Deliciosa</div>
+                    </button>
+                    <button class="plant-selector" onclick="selectPlant('snake')" id="plant-snake">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🌵</div>
+                        <div style="font-size: 1.2rem; font-weight: bold;">Snake Plant</div>
+                    </button>
+                    <button class="plant-selector" onclick="selectPlant('peace')" id="plant-peace">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🌺</div>
+                        <div style="font-size: 1.2rem; font-weight: bold;">Peace Lily</div>
+                    </button>
+                    <button class="plant-selector" onclick="selectPlant('fiddle')" id="plant-fiddle">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">🍃</div>
+                        <div style="font-size: 1.2rem; font-weight: bold;">Fiddle Leaf Fig</div>
+                    </button>
+                </div>
+            </div>
+            
+            <div id="plantDetails">
+                <div class="section">
+                    <h2 style="font-size: 2rem; margin-bottom: 1rem;" id="selectedPlantName">🌿 Monstera Deliciosa</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon">🌡️</div>
+                            <div class="stat-value" id="plantTemp">24.5°C</div>
+                            <div class="stat-label">Temperature</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">💧</div>
+                            <div class="stat-value" id="plantHumidity">68%</div>
+                            <div class="stat-label">Humidity</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🌱</div>
+                            <div class="stat-value" id="plantSoil">32%</div>
+                            <div class="stat-label">Soil Moisture</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">☀️</div>
+                            <div class="stat-value" id="plantLight">650 lux</div>
+                            <div class="stat-label">Light Level</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h2 style="font-size: 1.8rem;">📊 Plant Status</h2>
+                        <div style="font-size: 1.1rem; color: #666; display: flex; align-items: center; gap: 0.5rem;">
+                            <div style="width: 10px; height: 10px; background: #4a7c59; border-radius: 50%; animation: pulse 2s infinite;"></div>
+                            Live Data
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                        <div>
+                            <p style="font-size: 1.3rem; margin-bottom: 0.8rem;"><strong>Health Status:</strong> <span id="plantHealth" style="color: #4a7c59;">Healthy</span></p>
+                            <p style="font-size: 1.3rem; margin-bottom: 0.8rem;"><strong>Last Watered:</strong> <span id="lastWatered">2 days ago</span></p>
+                            <p style="font-size: 1.3rem; margin-bottom: 0.8rem;"><strong>Next Watering:</strong> <span id="nextWatering">In 1 day</span></p>
+                            <p style="font-size: 1.3rem;"><strong>Growth Stage:</strong> <span id="growthStage">Mature</span></p>
+                        </div>
+                        <div>
+                            <p style="font-size: 1.3rem; margin-bottom: 0.8rem;"><strong>Location:</strong> <span id="plantLocation">Living Room</span></p>
+                            <p style="font-size: 1.3rem; margin-bottom: 0.8rem;"><strong>Age:</strong> <span id="plantAge">2 years</span></p>
+                            <p style="font-size: 1.3rem; margin-bottom: 0.8rem;"><strong>Fertilized:</strong> <span id="lastFertilized">1 week ago</span></p>
+                            <p style="font-size: 1.3rem;"><strong>Sensor ID:</strong> <span id="sensorId">SENS_001</span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section">
+                    <h2 style="font-size: 1.8rem; margin-bottom: 1rem;">🎯 Care Recommendations</h2>
+                    <div id="careRecommendations">
+                        <p style="font-size: 1.3rem; margin-bottom: 0.8rem;">⚠️ <strong>Urgent:</strong> Soil moisture is low - water within 24 hours</p>
+                        <p style="font-size: 1.3rem; margin-bottom: 0.8rem;">💡 <strong>Tip:</strong> Move to brighter location for better growth</p>
+                        <p style="font-size: 1.3rem;">📅 <strong>Schedule:</strong> Next fertilizing due in 3 weeks</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Images Page -->
+        <div id="upload" class="page">
+            <div class="page-header">
+                <h1>📸 Plant Image Upload</h1>
+                <p>Upload images of your plants for automatic identification and disease diagnosis</p>
+            </div>
+            
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📷</div>
+                    <div class="upload-text">Drag images here or click to upload</div>
+                    <div class="upload-subtext">Supports JPG, PNG, WEBP files up to 10MB</div>
+                    <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                        Select Images
+                    </button>
+                    <input type="file" id="fileInput" class="file-input" multiple accept="image/*">
+                </div>
+                <div class="status-message" id="uploadStatus"></div>
+            </div>
+            
+            <div class="section" id="uploadResults" style="display: none;">
+                <h2>Analysis Results</h2>
+                <img id="previewImage" class="preview-image" style="display: none;">
+                <div id="analysisResults"></div>
+            </div>
+        </div>
+
+        <!-- IoT Sensors Page -->
+        <div id="sensors" class="page">
+            <div class="page-header">
+                <h1>📡 IoT Sensors & Data Sampling</h1>
+                <p>Real-time monitoring of environmental data through smart sensors</p>
+            </div>
+            
+            <div class="section">
+                <button class="btn" onclick="startSampling()">🚀 Start Sampling</button>
+                <button class="btn" onclick="stopSampling()">⏹️ Stop Sampling</button>
+                <button class="btn" onclick="exportData()">📥 Export Data</button>
+            </div>
+            
+            <div class="sensors-grid">
+                <div class="sensor-card">
+                    <div class="sensor-header">
+                        <div class="sensor-title">
+                            <span>🌡️</span>
+                            Temperature
+                        </div>
+                        <div class="sensor-status status-online">Online</div>
+                    </div>
+                    <div class="sensor-value" id="tempValue">24.5<span class="sensor-unit">°C</span></div>
+                </div>
+                
+                <div class="sensor-card">
+                    <div class="sensor-header">
+                        <div class="sensor-title">
+                            <span>💧</span>
+                            Humidity
+                        </div>
+                        <div class="sensor-status status-online">Online</div>
+                    </div>
+                    <div class="sensor-value" id="humidityValue">68<span class="sensor-unit">%</span></div>
+                </div>
+                
+                <div class="sensor-card">
+                    <div class="sensor-header">
+                        <div class="sensor-title">
+                            <span>🌱</span>
+                            Soil Moisture
+                        </div>
+                        <div class="sensor-status status-warning">Needs Attention</div>
+                    </div>
+                    <div class="sensor-value" id="soilValue">32<span class="sensor-unit">%</span></div>
+                </div>
+                
+                <div class="sensor-card">
+                    <div class="sensor-header">
+                        <div class="sensor-title">
+                            <span>☀️</span>
+                            Light Level
+                        </div>
+                        <div class="sensor-status status-online">Online</div>
+                    </div>
+                    <div class="sensor-value" id="lightValue">650<span class="sensor-unit">lux</span></div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2 style="font-size: 1.8rem; margin-bottom: 1rem;">📊 Search Engine Status</h2>
+                <p style="font-size: 1.3rem; margin-bottom: 0.8rem;">✅ Connected to broker: mqtt.gardensense.com:1883</p>
+                <p style="font-size: 1.3rem; margin-bottom: 0.8rem;">📡 Receiving data from 4 sensors</p>
+                <p style="font-size: 1.3rem;">⏱️ Last update: <span id="lastUpdate">Just now</span></p>
+            </div>
+        </div>
+
+
+
+        <!-- Search Page -->
+        <div id="search" class="page">
+            <div class="page-header">
+                <h1>🔍 Advanced Search Engine</h1>
+                <p>Search for information about plants, diseases, care tips and sensor data</p>
+            </div>
+            
+            <div class="search-container">
+                <input type="text" class="search-input" id="searchInput" placeholder="Type your search here...">
+                <button class="search-btn" onclick="performSearch()">🔍 Search</button>
+            </div>
+            
+            <div class="results-grid" id="searchResults">
+                <div class="result-card">
+                    <div class="result-title">Monstera Deliciosa - Complete Care Guide</div>
+                    <div class="result-description">Comprehensive guide to growing and caring for Monstera Deliciosa, including light requirements, watering and fertilizing</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-title">Identifying Brown Spots on Leaves</div>
+                    <div class="result-description">Guide to identifying fungal diseases that cause brown spots on plant leaves</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-title">Automatic Watering with IoT Sensors</div>
+                    <div class="result-description">Setting up a smart watering system based on soil moisture sensor data</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-title">Snake Plant Care for Beginners</div>
+                    <div class="result-description">Everything you need to know about growing snake plants, perfect for beginners</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Page -->
+        <div id="analytics" class="page">
+            <div class="page-header">
+                <h1>📊 Analytics & Trends</h1>
+                <p>Deep insights into your garden's performance and growth patterns</p>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon">🌱</div>
+                    <div class="metric-value">24</div>
+                    <div class="metric-label">Total Plants</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">💚</div>
+                    <div class="metric-value">21</div>
+                    <div class="metric-label">Healthy Plants</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">⚠️</div>
+                    <div class="metric-value">3</div>
+                    <div class="metric-label">Active Alerts</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon">📊</div>
+                    <div class="metric-value">8.7</div>
+                    <div class="metric-label">Avg Health Score</div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2 style="font-size: 1.8rem; margin-bottom: 1rem;">🎯 Smart Insights</h2>
+                <p style="font-size: 1.3rem; margin-bottom: 1rem;">💡 <strong>Care Recommendation:</strong> 3 plants need watering today. Temperature is ideal for growth.</p>
+                <p style="font-size: 1.3rem; margin-bottom: 1rem;">⚡ <strong>Energy Savings:</strong> Natural light levels are high - can reduce artificial lighting by 30%.</p>
+                <p style="font-size: 1.3rem;">🔔 <strong>Preventive Alert:</strong> Monstera soil moisture is dropping - watering needed within 24 hours.</p>
+            </div>
+            
+            <div class="section">
+                <h2 style="font-size: 1.8rem; margin-bottom: 1rem;">📈 Environmental Trends</h2>
+                <p style="font-size: 1.3rem; margin-bottom: 0.8rem;">Temperature: 24.5°C (Optimal)</p>
+                <p style="font-size: 1.3rem; margin-bottom: 0.8rem;">Humidity: 68% (Good)</p>
+                <p style="font-size: 1.3rem; margin-bottom: 0.8rem;">Light Level: 650 lux (Adequate)</p>
+                <p style="font-size: 1.3rem;">Soil Moisture: 32% (Low - Needs Attention)</p>
+            </div>
+        </div>
+
+        <!-- Smart Alerts Page -->
+        <div id="alerts" class="page">
+            <div class="page-header">
+                <h1>🚨 Smart Alert System</h1>
+                <p>Intelligent monitoring with real-time notifications and sound alerts</p>
+            </div>
+            
+            <div class="section">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2 style="font-size: 1.8rem;">🔔 Active Alerts</h2>
+                    <div>
+                        <button class="btn" onclick="testAlert()">🧪 Test Alert</button>
+                        <button class="btn" onclick="clearAllAlerts()">🗑️ Clear All</button>
+                    </div>
+                </div>
+                
+                <div id="alertsList">
+                    <div class="alert-card critical">
+                        <div class="alert-header">
+                            <div class="alert-title">🚨 Critical: Low Soil Moisture</div>
+                            <div class="alert-time">2 min ago</div>
+                        </div>
+                        <div class="alert-message">
+                            Monstera Deliciosa soil moisture dropped to 15%. Immediate watering required to prevent plant stress.
+                        </div>
+                        <div class="alert-actions">
+                            <button class="alert-btn btn-resolve" onclick="resolveAlert(this)">✅ Resolve</button>
+                            <button class="alert-btn btn-snooze" onclick="snoozeAlert(this)">⏰ Snooze 1h</button>
+                            <button class="alert-btn btn-dismiss" onclick="dismissAlert(this)">❌ Dismiss</button>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-card warning">
+                        <div class="alert-header">
+                            <div class="alert-title">⚠️ Warning: High Temperature</div>
+                            <div class="alert-time">15 min ago</div>
+                        </div>
+                        <div class="alert-message">
+                            Greenhouse temperature reached 32°C. Consider increasing ventilation or adding shade.
+                        </div>
+                        <div class="alert-actions">
+                            <button class="alert-btn btn-resolve" onclick="resolveAlert(this)">✅ Resolve</button>
+                            <button class="alert-btn btn-snooze" onclick="snoozeAlert(this)">⏰ Snooze 1h</button>
+                            <button class="alert-btn btn-dismiss" onclick="dismissAlert(this)">❌ Dismiss</button>
+                        </div>
+                    </div>
+                    
+                    <div class="alert-card info">
+                        <div class="alert-header">
+                            <div class="alert-title">ℹ️ Info: Fertilizing Reminder</div>
+                            <div class="alert-time">1 hour ago</div>
+                        </div>
+                        <div class="alert-message">
+                            Peace Lily is due for monthly fertilizing. Use diluted liquid fertilizer (1:10 ratio).
+                        </div>
+                        <div class="alert-actions">
+                            <button class="alert-btn btn-resolve" onclick="resolveAlert(this)">✅ Resolve</button>
+                            <button class="alert-btn btn-snooze" onclick="snoozeAlert(this)">⏰ Snooze 1h</button>
+                            <button class="alert-btn btn-dismiss" onclick="dismissAlert(this)">❌ Dismiss</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2 style="font-size: 1.8rem; margin-bottom: 1rem;">⚙️ Alert Settings</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+                    <div>
+                        <h3 style="margin-bottom: 1rem;">🔊 Sound Notifications</h3>
+                        <label style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                            <input type="checkbox" id="soundEnabled" checked style="transform: scale(1.5);">
+                            <span style="font-size: 1.2rem;">Enable sound alerts</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 1rem;">
+                            <span style="font-size: 1.2rem;">Volume:</span>
+                            <input type="range" id="volumeSlider" min="0" max="100" value="70" style="flex: 1;">
+                            <span id="volumeDisplay" style="font-size: 1.2rem;">70%</span>
+                        </label>
+                    </div>
+                    <div>
+                        <h3 style="margin-bottom: 1rem;">📱 Alert Types</h3>
+                        <label style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                            <input type="checkbox" checked style="transform: scale(1.5);">
+                            <span style="font-size: 1.2rem;">Critical alerts (immediate action)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem;">
+                            <input type="checkbox" checked style="transform: scale(1.5);">
+                            <span style="font-size: 1.2rem;">Warning alerts (attention needed)</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 1rem;">
+                            <input type="checkbox" checked style="transform: scale(1.5);">
+                            <span style="font-size: 1.2rem;">Info alerts (reminders)</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sound Toggle Button -->
+    <button class="sound-toggle" id="soundToggle" onclick="toggleSound()" title="Toggle Sound">🔊</button>
+
+    <script>
+        let samplingInterval;
+        let isRunning = false;
+
+        // Navigation
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            document.getElementById('nav-' + pageId).classList.add('active');
+            
+            // If returning to dashboard, ensure a plant is selected and start updates
+            if (pageId === 'dashboard') {
+                selectPlant('monstera');
+                startDashboardUpdates();
+            } else {
+                stopDashboardUpdates();
+            }
+        }
+
+        // File Upload
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = '#e8f5e8';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.background = '#f8fbf8';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.background = '#f8fbf8';
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                if (file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        document.getElementById('previewImage').src = e.target.result;
+                        document.getElementById('previewImage').style.display = 'block';
+                        document.getElementById('uploadResults').style.display = 'block';
+                        
+                        // Simulate AI analysis
+                        setTimeout(() => {
+                            const detectedPlants = [
+                                { id: 'rubber', name: 'Rubber Plant', icon: '🌳', confidence: 92 },
+                                { id: 'pothos', name: 'Golden Pothos', icon: '🌿', confidence: 88 },
+                                { id: 'spider', name: 'Spider Plant', icon: '🌱', confidence: 95 }
+                            ];
+                            
+                            const randomPlant = detectedPlants[Math.floor(Math.random() * detectedPlants.length)];
+                            
+                            document.getElementById('analysisResults').innerHTML = `
+                                <h2 style="font-size: 2rem; color: #2d5a2d; margin-bottom: 1rem;">${randomPlant.icon} ${randomPlant.name}</h2>
+                                <p style="font-size: 1.3rem; margin-bottom: 0.8rem;"><strong>Confidence Level:</strong> ${randomPlant.confidence}% Match</p>
+                                <p style="font-size: 1.3rem; margin-bottom: 0.8rem;"><strong>Health Status:</strong> Healthy & Thriving</p>
+                                <p style="font-size: 1.3rem; margin-bottom: 0.8rem;"><strong>Care Instructions:</strong> Water twice a week, allow soil to dry between waterings</p>
+                                <p style="font-size: 1.3rem; margin-bottom: 0.8rem;"><strong>Light Requirements:</strong> Bright indirect light, avoid direct sunlight</p>
+                                <p style="font-size: 1.3rem; margin-bottom: 0.8rem;"><strong>Temperature:</strong> 65-80°F (18-27°C)</p>
+                                <p style="font-size: 1.3rem; margin-bottom: 1rem;"><strong>Humidity:</strong> 50-60% for optimal growth</p>
+                                <button class="btn" onclick="addPlantToDashboard('${randomPlant.id}', '${randomPlant.name}', '${randomPlant.icon}')" style="font-size: 1.2rem; padding: 1rem 2rem;">
+                                    ➕ Add ${randomPlant.name} to Dashboard
+                                </button>
+                            `;
+                            showStatus('Analysis completed successfully!', 'success');
+                        }, 2000);
+                        
+                        showStatus('Image uploaded successfully!', 'success');
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    showStatus('Please select a valid image file', 'error');
+                }
+            }
+        }
+
+        // Sensor Functions
+        function startSampling() {
+            if (isRunning) return;
+            isRunning = true;
+            
+            samplingInterval = setInterval(() => {
+                updateSensorData();
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+            }, 5000);
+            
+            showStatus('Data sampling started', 'success');
+        }
+
+        function stopSampling() {
+            if (!isRunning) return;
+            clearInterval(samplingInterval);
+            isRunning = false;
+            showStatus('Data sampling stopped', 'success');
+        }
+
+        function updateSensorData() {
+            const temp = (Math.random() * 10 + 20).toFixed(1);
+            const humidity = Math.floor(Math.random() * 20 + 60);
+            const soil = Math.floor(Math.random() * 15 + 30);
+            const light = Math.floor(Math.random() * 200 + 500);
+            
+            document.getElementById('tempValue').innerHTML = temp + '<span class="sensor-unit">°C</span>';
+            document.getElementById('humidityValue').innerHTML = humidity + '<span class="sensor-unit">%</span>';
+            document.getElementById('soilValue').innerHTML = soil + '<span class="sensor-unit">%</span>';
+            document.getElementById('lightValue').innerHTML = light + '<span class="sensor-unit">lux</span>';
+        }
+
+        function exportData() {
+            const data = "timestamp,temperature,humidity,soil_moisture,light\n" +
+                        "2024-01-15 14:30:20,24.5,68,32,650\n" +
+                        "2024-01-15 14:30:15,24.2,67,35,680\n" +
+                        "2024-01-15 14:30:10,24.8,69,38,720\n";
+            
+            const blob = new Blob([data], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'sensor_data.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            
+            showStatus('Data exported successfully', 'success');
+        }
+
+        // MQTT Functions
+        let mqttStreamPaused = false;
+        let mqttInterval;
+        
+        function clearMqttLog() {
+            document.getElementById('mqttStream').innerHTML = '';
+            showStatus('MQTT log cleared', 'success');
+        }
+        
+        function pauseMqttStream() {
+            mqttStreamPaused = !mqttStreamPaused;
+            const btn = event.target;
+            btn.textContent = mqttStreamPaused ? '▶️ Resume Stream' : '⏸️ Pause Stream';
+            showStatus(mqttStreamPaused ? 'Stream paused' : 'Stream resumed', 'success');
+        }
+        
+        function exportMqttLog() {
+            const log = document.getElementById('mqttStream').innerText;
+            const blob = new Blob([log], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'mqtt_log.txt';
+            a.click();
+            window.URL.revokeObjectURL(url);
+            showStatus('MQTT log exported', 'success');
+        }
+        
+        function runMqttQuery() {
+            showStatus('Running MQTT query...', 'success');
+            // Simulate query results
+            setTimeout(() => {
+                showStatus('Query completed - 47 messages found', 'success');
+            }, 1500);
+        }
+        
+        function addMqttMessage() {
+            if (mqttStreamPaused) return;
+            
+            const stream = document.getElementById('mqttStream');
+            const time = new Date().toLocaleTimeString();
+            const messages = [
+                `[${time}] sensors/greenhouse/temperature: ${(Math.random() * 10 + 20).toFixed(1)}°C`,
+                `[${time}] sensors/greenhouse/humidity: ${Math.floor(Math.random() * 20 + 60)}%`,
+                `[${time}] sensors/greenhouse/soil_moisture: ${Math.floor(Math.random() * 15 + 30)}%`,
+                `[${time}] plants/status/monstera: {"health": "good", "water_level": "${Math.random() > 0.5 ? 'ok' : 'low'}"}`,
+                `[${time}] system/health: All systems operational`
+            ];
+            
+            const newMessage = document.createElement('div');
+            newMessage.style.cssText = 'margin-bottom: 0.5rem; padding: 0.5rem; background: white; border-radius: 5px; font-weight: bold;';
+            const messageText = messages[Math.floor(Math.random() * messages.length)];
+            newMessage.textContent = messageText;
+            
+            // Add colored border for different message types
+            if (messageText.includes('LOW') || messageText.includes('critical')) {
+                newMessage.style.borderLeft = '4px solid #f44336';
+            } else if (messageText.includes('operational') || messageText.includes('good')) {
+                newMessage.style.borderLeft = '4px solid #4a7c59';
+            } else if (messageText.includes('warning')) {
+                newMessage.style.borderLeft = '4px solid #ff9800';
+            }
+            
+            stream.appendChild(newMessage);
+            stream.scrollTop = stream.scrollHeight;
+            
+            // Update stats
+            document.getElementById('msgRate').textContent = (Math.random() * 2 + 2).toFixed(1);
+            document.getElementById('lastPing').textContent = (Math.random() * 2).toFixed(1) + 'ms';
+        }
+
+        // Search Function
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const results = document.getElementById('searchResults');
+            
+            if (query) {
+                results.innerHTML = `
+                    <div class="result-card">
+                        <div class="result-title">Search Results for: "${query}"</div>
+                        <div class="result-description">Found relevant information about ${query} in our plant database</div>
+                    </div>
+                `;
+                showStatus('Search completed', 'success');
+            }
+        }
+
+        // Utility Functions
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('uploadStatus');
+            statusEl.textContent = message;
+            statusEl.className = `status-message status-${type}`;
+            statusEl.style.display = 'block';
+            
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 3000);
+        }
+
+        // Plant selection and data
+        const plantData = {
+            monstera: {
+                name: '🌿 Monstera Deliciosa',
+                temp: '24.5°C',
+                humidity: '68%',
+                soil: '32%',
+                light: '650 lux',
+                health: 'Needs Water',
+                healthColor: '#ff9800',
+                lastWatered: '2 days ago',
+                nextWatering: 'Today',
+                location: 'Living Room',
+                age: '2 years',
+                growthStage: 'Mature',
+                lastFertilized: '1 week ago',
+                sensorId: 'SENS_001',
+                recommendations: [
+                    '⚠️ <strong>Urgent:</strong> Soil moisture is low - water within 24 hours',
+                    '💡 <strong>Tip:</strong> Move to brighter location for better growth',
+                    '📅 <strong>Schedule:</strong> Next fertilizing due in 3 weeks'
+                ]
+            },
+            snake: {
+                name: '🌵 Snake Plant',
+                temp: '22.1°C',
+                humidity: '45%',
+                soil: '55%',
+                light: '320 lux',
+                health: 'Excellent',
+                healthColor: '#4a7c59',
+                lastWatered: '1 week ago',
+                nextWatering: 'In 1 week',
+                location: 'Bedroom',
+                age: '3 years',
+                growthStage: 'Mature',
+                lastFertilized: '2 months ago',
+                sensorId: 'SENS_002',
+                recommendations: [
+                    '✅ <strong>Perfect:</strong> All conditions are optimal',
+                    '💡 <strong>Tip:</strong> Very low maintenance - continue current care',
+                    '📅 <strong>Schedule:</strong> Next fertilizing in 2 months'
+                ]
+            },
+            peace: {
+                name: '🌺 Peace Lily',
+                temp: '23.8°C',
+                humidity: '72%',
+                soil: '78%',
+                light: '520 lux',
+                health: 'Blooming',
+                healthColor: '#4a7c59',
+                lastWatered: '1 day ago',
+                nextWatering: 'In 2 days',
+                location: 'Kitchen',
+                age: '1.5 years',
+                growthStage: 'Flowering',
+                lastFertilized: '3 days ago',
+                sensorId: 'SENS_003',
+                recommendations: [
+                    '🌸 <strong>Blooming:</strong> Beautiful flowers appearing!',
+                    '💡 <strong>Tip:</strong> Maintain high humidity for continued blooming',
+                    '📅 <strong>Schedule:</strong> Next fertilizing in 2 weeks'
+                ]
+            },
+            fiddle: {
+                name: '🍃 Fiddle Leaf Fig',
+                temp: '26.2°C',
+                humidity: '58%',
+                soil: '45%',
+                light: '780 lux',
+                health: 'Good',
+                healthColor: '#4a7c59',
+                lastWatered: '3 days ago',
+                nextWatering: 'In 4 days',
+                location: 'Living Room',
+                age: '4 years',
+                growthStage: 'Large',
+                lastFertilized: '5 days ago',
+                sensorId: 'SENS_004',
+                recommendations: [
+                    '✅ <strong>Healthy:</strong> Growing well in current conditions',
+                    '💡 <strong>Tip:</strong> Rotate weekly for even growth',
+                    '📅 <strong>Schedule:</strong> Next fertilizing in 3 weeks'
+                ]
+            }
+        };
+        
+        function selectPlant(plantId) {
+            // Remove active class from all selectors
+            document.querySelectorAll('.plant-selector').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Add active class to selected
+            document.getElementById('plant-' + plantId).classList.add('active');
+            
+            // Update plant data
+            const plant = plantData[plantId];
+            document.getElementById('selectedPlantName').textContent = plant.name;
+            document.getElementById('plantTemp').textContent = plant.temp;
+            document.getElementById('plantHumidity').textContent = plant.humidity;
+            document.getElementById('plantSoil').textContent = plant.soil;
+            document.getElementById('plantLight').textContent = plant.light;
+            document.getElementById('plantHealth').textContent = plant.health;
+            document.getElementById('plantHealth').style.color = plant.healthColor;
+            document.getElementById('lastWatered').textContent = plant.lastWatered;
+            document.getElementById('nextWatering').textContent = plant.nextWatering;
+            document.getElementById('plantLocation').textContent = plant.location;
+            document.getElementById('plantAge').textContent = plant.age;
+            document.getElementById('growthStage').textContent = plant.growthStage;
+            document.getElementById('lastFertilized').textContent = plant.lastFertilized;
+            document.getElementById('sensorId').textContent = plant.sensorId;
+            
+            // Update recommendations
+            const recDiv = document.getElementById('careRecommendations');
+            recDiv.innerHTML = plant.recommendations.map(rec => 
+                `<p style="font-size: 1.3rem; margin-bottom: 0.8rem;">${rec}</p>`
+            ).join('');
+        }
+
+        // Real-time dashboard updates
+        let dashboardInterval;
+        
+        function updateDashboardData() {
+            // Get currently selected plant
+            const activePlant = document.querySelector('.plant-selector.active');
+            if (!activePlant) return;
+            
+            const plantId = activePlant.id.replace('plant-', '');
+            const plant = plantData[plantId];
+            
+            // Generate random realistic values
+            const newTemp = (Math.random() * 4 + 22).toFixed(1) + '°C';
+            const newHumidity = Math.floor(Math.random() * 20 + 55) + '%';
+            const newSoil = Math.floor(Math.random() * 30 + 30) + '%';
+            const newLight = Math.floor(Math.random() * 200 + 500) + ' lux';
+            
+            // Update display
+            document.getElementById('plantTemp').textContent = newTemp;
+            document.getElementById('plantHumidity').textContent = newHumidity;
+            document.getElementById('plantSoil').textContent = newSoil;
+            document.getElementById('plantLight').textContent = newLight;
+            
+            // Update plant data
+            plant.temp = newTemp;
+            plant.humidity = newHumidity;
+            plant.soil = newSoil;
+            plant.light = newLight;
+            
+            // Update health status based on soil moisture
+            const soilValue = parseInt(newSoil);
+            if (soilValue < 35) {
+                plant.health = 'Needs Water';
+                plant.healthColor = '#ff9800';
+                document.getElementById('plantHealth').textContent = 'Needs Water';
+                document.getElementById('plantHealth').style.color = '#ff9800';
+            } else if (soilValue > 70) {
+                plant.health = 'Excellent';
+                plant.healthColor = '#4a7c59';
+                document.getElementById('plantHealth').textContent = 'Excellent';
+                document.getElementById('plantHealth').style.color = '#4a7c59';
+            } else {
+                plant.health = 'Good';
+                plant.healthColor = '#4a7c59';
+                document.getElementById('plantHealth').textContent = 'Good';
+                document.getElementById('plantHealth').style.color = '#4a7c59';
+            }
+            
+            // Add visual indicator of update
+            const tempEl = document.getElementById('plantTemp');
+            tempEl.style.background = '#e8f5e8';
+            setTimeout(() => {
+                tempEl.style.background = '';
+            }, 500);
+        }
+        
+        function startDashboardUpdates() {
+            if (dashboardInterval) clearInterval(dashboardInterval);
+            dashboardInterval = setInterval(updateDashboardData, 5000);
+        }
+        
+        function stopDashboardUpdates() {
+            if (dashboardInterval) {
+                clearInterval(dashboardInterval);
+                dashboardInterval = null;
+            }
+        }
+
+        function addPlantToDashboard(plantId, plantName, plantIcon) {
+            // Generate random sensor data for new plant
+            const newPlantData = {
+                name: plantIcon + ' ' + plantName,
+                temp: (Math.random() * 4 + 22).toFixed(1) + '°C',
+                humidity: Math.floor(Math.random() * 20 + 55) + '%',
+                soil: Math.floor(Math.random() * 30 + 40) + '%',
+                light: Math.floor(Math.random() * 200 + 500) + ' lux',
+                health: 'Newly Added',
+                healthColor: '#4a7c59',
+                lastWatered: 'Just added',
+                nextWatering: 'In 2-3 days',
+                location: 'New Location',
+                age: 'Unknown',
+                growthStage: 'Young',
+                lastFertilized: 'Not yet',
+                sensorId: 'SENS_' + String(Math.floor(Math.random() * 900) + 100),
+                recommendations: [
+                    '🌱 <strong>New Plant:</strong> Monitor closely for first few weeks',
+                    '💧 <strong>Watering:</strong> Check soil moisture daily until established',
+                    '🌟 <strong>Placement:</strong> Find optimal location with proper lighting'
+                ]
+            };
+            
+            // Add to plant data
+            plantData[plantId] = newPlantData;
+            
+            // Add plant selector button
+            const plantSelectorsContainer = document.querySelector('[style*="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr))"]');
+            
+            if (plantSelectorsContainer) {
+                const newButton = document.createElement('button');
+                newButton.className = 'plant-selector';
+                newButton.id = 'plant-' + plantId;
+                newButton.onclick = () => selectPlant(plantId);
+                newButton.innerHTML = `
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">${plantIcon}</div>
+                    <div style="font-size: 1.2rem; font-weight: bold;">${plantName}</div>
+                `;
+                plantSelectorsContainer.appendChild(newButton);
+            }
+            
+            showStatus(`${plantName} added to dashboard successfully!`, 'success');
+            
+            // Auto-select the new plant and go to dashboard
+            setTimeout(() => {
+                selectPlant(plantId);
+                showPage('dashboard');
+            }, 1500);
+        }
+
+        // Smart Alerts System - ADDED FEATURE
+        let soundEnabled = true;
+        let alertVolume = 0.7;
+        let alertCount = 0;
+        
+        function playAlertSound(type = 'critical') {
+            if (!soundEnabled) return;
+            
+            // Create audio context for different alert sounds
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            // Different frequencies for different alert types
+            const frequencies = {
+                critical: [800, 600, 800, 600], // Urgent beeping
+                warning: [500, 400], // Medium tone
+                info: [300] // Gentle tone
+            };
+            
+            const freqs = frequencies[type] || frequencies.critical;
+            let currentFreq = 0;
+            
+            function playTone() {
+                if (currentFreq >= freqs.length) {
+                    oscillator.stop();
+                    return;
+                }
+                
+                oscillator.frequency.setValueAtTime(freqs[currentFreq], audioContext.currentTime);
+                gainNode.gain.setValueAtTime(alertVolume * 0.3, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                
+                currentFreq++;
+                setTimeout(playTone, 400);
+            }
+            
+            oscillator.start();
+            playTone();
+        }
+        
+        function showFloatingAlert(title, message, type = 'critical') {
+            // Remove existing floating alert
+            const existing = document.querySelector('.floating-alert');
+            if (existing) existing.remove();
+            
+            // Create new floating alert
+            const alert = document.createElement('div');
+            alert.className = 'floating-alert';
+            alert.style.borderLeftColor = type === 'critical' ? '#f44336' : type === 'warning' ? '#ff9800' : '#2196f3';
+            alert.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                    <strong style="font-size: 1.2rem; color: #2d5a2d;">${title}</strong>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+                </div>
+                <div style="font-size: 1.1rem; margin-bottom: 1rem;">${message}</div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="alert-btn btn-resolve" onclick="this.parentElement.parentElement.remove()">✅ OK</button>
+                </div>
+            `;
+            
+            document.body.appendChild(alert);
+            
+            // Play sound
+            playAlertSound(type);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (alert.parentElement) alert.remove();
+            }, 10000);
+        }
+        
+        function testAlert() {
+            const alertTypes = [
+                { title: '🚨 Test Critical Alert', message: 'This is a test critical alert with sound!', type: 'critical' },
+                { title: '⚠️ Test Warning Alert', message: 'This is a test warning alert with different sound!', type: 'warning' },
+                { title: 'ℹ️ Test Info Alert', message: 'This is a test info alert with gentle sound!', type: 'info' }
+            ];
+            
+            const randomAlert = alertTypes[Math.floor(Math.random() * alertTypes.length)];
+            showFloatingAlert(randomAlert.title, randomAlert.message, randomAlert.type);
+        }
+        
+        function resolveAlert(button) {
+            const alertCard = button.closest('.alert-card');
+            alertCard.style.animation = 'slideOut 0.5s ease-in';
+            setTimeout(() => alertCard.remove(), 500);
+            showStatus('Alert resolved successfully', 'success');
+        }
+        
+        function snoozeAlert(button) {
+            const alertCard = button.closest('.alert-card');
+            alertCard.style.opacity = '0.5';
+            alertCard.style.pointerEvents = 'none';
+            showStatus('Alert snoozed for 1 hour', 'success');
+            
+            // Re-enable after 5 seconds (demo purposes)
+            setTimeout(() => {
+                alertCard.style.opacity = '1';
+                alertCard.style.pointerEvents = 'auto';
+                showFloatingAlert('🔔 Snoozed Alert Returned', 'Your snoozed alert is now active again', 'warning');
+            }, 5000);
+        }
+        
+        function dismissAlert(button) {
+            const alertCard = button.closest('.alert-card');
+            alertCard.style.transform = 'translateX(100%)';
+            alertCard.style.opacity = '0';
+            setTimeout(() => alertCard.remove(), 300);
+            showStatus('Alert dismissed', 'success');
+        }
+        
+        function clearAllAlerts() {
+            const alerts = document.querySelectorAll('.alert-card');
+            alerts.forEach((alert, index) => {
+                setTimeout(() => {
+                    alert.style.animation = 'slideOut 0.3s ease-in';
+                    setTimeout(() => alert.remove(), 300);
+                }, index * 100);
+            });
+            showStatus('All alerts cleared', 'success');
+        }
+        
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            const button = document.getElementById('soundToggle');
+            button.textContent = soundEnabled ? '🔊' : '🔇';
+            button.classList.toggle('muted', !soundEnabled);
+            button.title = soundEnabled ? 'Mute Sound' : 'Enable Sound';
+            
+            // Update checkbox
+            document.getElementById('soundEnabled').checked = soundEnabled;
+            
+            showStatus(soundEnabled ? 'Sound alerts enabled' : 'Sound alerts muted', 'success');
+        }
+        
+        // Auto-generate random alerts every 30 seconds
+        function generateRandomAlert() {
+            const alerts = [
+                { title: '💧 Watering Needed', message: 'Snake Plant soil moisture is getting low', type: 'warning' },
+                { title: '🌡️ Temperature Alert', message: 'Greenhouse temperature is rising above optimal range', type: 'warning' },
+                { title: '🌱 Growth Milestone', message: 'Your Monstera has grown 2cm this week!', type: 'info' },
+                { title: '🔋 Sensor Battery Low', message: 'Soil moisture sensor battery at 15%', type: 'critical' }
+            ];
+            
+            if (Math.random() > 0.7) { // 30% chance
+                const randomAlert = alerts[Math.floor(Math.random() * alerts.length)];
+                showFloatingAlert(randomAlert.title, randomAlert.message, randomAlert.type);
+            }
+        }
+        
+        // Volume slider functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumeDisplay = document.getElementById('volumeDisplay');
+            const soundCheckbox = document.getElementById('soundEnabled');
+            
+            if (volumeSlider) {
+                volumeSlider.addEventListener('input', function() {
+                    alertVolume = this.value / 100;
+                    volumeDisplay.textContent = this.value + '%';
+                });
+            }
+            
+            if (soundCheckbox) {
+                soundCheckbox.addEventListener('change', function() {
+                    soundEnabled = this.checked;
+                    document.getElementById('soundToggle').textContent = soundEnabled ? '🔊' : '🔇';
+                });
+            }
+        });
+
+        // Auto-start sensor sampling and MQTT stream
+        setTimeout(() => {
+            startSampling();
+            mqttInterval = setInterval(addMqttMessage, 3000);
+            startDashboardUpdates();
+            
+            // Start random alert generation
+            setInterval(generateRandomAlert, 30000);
+        }, 1000);
+    </script>
+</body>
+</html>
